@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    tools {
+        maven 'Maven' // This should match the name you configured in Global Tool Configuration
+    }
+    stages {
+        stage('Code Checkout') {
+            steps {
+                git branch: 'main', 
+                    url: 'https://github.com/suramanjari-kesavan/IGP_1.git'
+            }
+        }
+        stage('Code Compile') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+        stage('Unit Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        stage('Code Packaging') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+    }
+}
