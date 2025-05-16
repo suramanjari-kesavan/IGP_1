@@ -2,39 +2,48 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven' // This should match the name you configured in Global Tool Configuration
+        maven 'Maven' // Ensure Maven is configured in Jenkins Global Tool Configuration
+    }
+
+    environment {
+        MAVEN_OPTS = '-Xmx256m' // Limit Maven memory usage
+        DOCKER_BUILDKIT = '1'  // Use Docker BuildKit for faster builds
     }
 
     stages {
         stage('Code Checkout') {
             steps {
-                git branch: 'main', 
+                git branch: 'main',
                     url: 'https://github.com/suramanjari-kesavan/IGP_1.git'
             }
         }
 
         stage('Code Compile') {
             steps {
-                sh 'mvn clean compile'
+                sh 'mvn clean compile -Dmaven.repo.local=${WORKSPACE}/.m2'
             }
         }
 
         stage('Unit Test') {
             steps {
-                sh 'mvn test'
+                sh 'mvn test -Dmaven.repo.local=${WORKSPACE}/.m2'
             }
         }
 
         stage('Code Packaging') {
             steps {
-                sh 'mvn package'
+                sh 'mvn package -Dmaven.repo.local=${WORKSPACE}/.m2'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'cp /var/lib/jenkins/workspace/$JOB_NAME/target/ABCtechnologies-1.0.war /var/lib/jenkins/workspace/$JOB_NAME/abc.war'
-                sh 'docker build -t suramanjarikesavan/abc_tech:$BUILD_NUMBER .'
+                script {
+                    sh '''
+                    cp ${WORKSPACE}/target/ABCtechnologies-1.0.war ${WORKSPACE}/abc.war
+                    docker build --memory=256m -t suramanjarikesavan/abc_tech:${BUILD_NUMBER} .
+                    '''
+                }
             }
         }
 
@@ -42,7 +51,7 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([credentialsId: 'dockerhub', url: '']) {
-                        sh 'docker push suramanjarikesavan/abc_tech:$BUILD_NUMBER'
+                        sh 'docker push suramanjarikesavan/abc_tech:${BUILD_NUMBER}'
                     }
                 }
             }
@@ -50,8 +59,16 @@ pipeline {
 
         stage('Deploy as Container') {
             steps {
-                sh 'docker run -itd -P suramanjarikesavan/abc_tech:$BUILD_NUMBER'
+                sh '''
+                docker run --memory=256m -itd -P suramanjarikesavan/abc_tech:${BUILD_NUMBER}
+                '''
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs() // Clean up workspace to free up disk space
         }
     }
 }
