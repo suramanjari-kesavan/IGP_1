@@ -41,7 +41,7 @@ pipeline {
                 script {
                     sh '''
                     cp ${WORKSPACE}/target/ABCtechnologies-1.0.war ${WORKSPACE}/abc.war
-                    docker build --memory=256m -t suramanjarikesavan/abc_tech:${BUILD_NUMBER} .
+                    docker build --memory=256m -t suramanjarikesavan/abc_tech:${BUILD_NUMBER} -t suramanjarikesavan/abc_tech:latest .
                     '''
                 }
             }
@@ -51,7 +51,10 @@ pipeline {
             steps {
                 script {
                     withDockerRegistry([credentialsId: 'dockerhub', url: '']) {
-                        sh 'docker push suramanjarikesavan/abc_tech:${BUILD_NUMBER}'
+                        sh '''
+                        docker push suramanjarikesavan/abc_tech:${BUILD_NUMBER}
+                        docker push suramanjarikesavan/abc_tech:latest
+                        '''
                     }
                 }
             }
@@ -60,8 +63,14 @@ pipeline {
         stage('Deploy as Container') {
             steps {
                 sh '''
-                docker run --memory=256m -itd -p 8081:8080 suramanjarikesavan/abc_tech:${BUILD_NUMBER}
+                docker run --memory=256m -itd -p 8081:8080 suramanjarikesavan/abc_tech:latest
                 '''
+            }
+        }
+        
+        stage('Deploy to Kubernetes with Ansible') {
+            steps {
+                sh 'ansible-playbook -i localhost, deploy_k8s.yaml'
             }
         }
     }

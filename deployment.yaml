@@ -1,21 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: abc-tech-deployment
+  name: abc-deployment
+  namespace: abc-namespace
   labels:
-    app: abc-tech
+    app: abc-app
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: abc-tech
+      app: abc-app
   template:
     metadata:
       labels:
-        app: abc-tech
+        app: abc-app
     spec:
       containers:
-        - name: abc-tech-container
+        - name: abc-container
           image: suramanjarikesavan/abc_tech:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
