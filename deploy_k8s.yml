@@ -2,10 +2,11 @@
   hosts: localhost
   connection: local
   vars:
-    workspace: "/default/path"  # Fallback if workspace is not provided
+    kubeconfig: "/root/.kube/config"
   tasks:
     - name: Create namespace
       kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
         state: present
         definition:
           apiVersion: v1
@@ -15,12 +16,14 @@
 
     - name: Deploy the app deployment
       kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
         state: present
         namespace: abc-namespace
         src: "{{ workspace }}/deployment.yaml"
 
     - name: Deploy the service
       kubernetes.core.k8s:
+        kubeconfig: "{{ kubeconfig }}"
         state: present
         namespace: abc-namespace
         src: "{{ workspace }}/service.yaml"
