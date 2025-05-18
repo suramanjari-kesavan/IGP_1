@@ -1,5 +1,8 @@
 - name: Deploy ABC app to Kubernetes
   hosts: localhost
+  connection: local
+  vars:
+    workspace: "/default/path"  # Fallback if workspace is not provided
   tasks:
     - name: Create namespace
       kubernetes.core.k8s:
@@ -14,10 +17,10 @@
       kubernetes.core.k8s:
         state: present
         namespace: abc-namespace
-        src: deployment.yaml
+        src: "{{ workspace }}/deployment.yaml"
 
     - name: Deploy the service
       kubernetes.core.k8s:
         state: present
         namespace: abc-namespace
-        src: service.yaml
+        src: "{{ workspace }}/service.yaml"
